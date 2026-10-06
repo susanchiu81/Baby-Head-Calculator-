@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infant Head Shape Calculator / 嬰兒頭型分析計算器</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .transition-all-200 {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12 antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3.5 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-teal-600 text-white rounded-xl shadow-md flex items-center justify-center">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-slate-900 leading-tight" data-i18n="app_title">
+                        嬰兒頭型分析計算器
+                    </h1>
+                    <p class="text-xs text-slate-500 font-medium">CI & CVAI Clinical Assessment Tool</p>
+                </div>
+            </div>
+
+            <!-- Header Controls (Lang Toggle + Reset) -->
+            <div class="flex items-center space-x-2">
+                <!-- Language Switcher Button -->
+                <button onclick="toggleLanguage()" class="flex items-center space-x-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl transition-all-200 border border-slate-200">
+                    <i data-lucide="languages" class="w-4 h-4 text-slate-500"></i>
+                    <span id="langLabel">English</span>
+                </button>
+
+                <!-- Reset Button -->
+                <button onclick="resetAll()" class="flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 transition-all-200 px-2.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-100" title="Reset">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline" data-i18n="btn_reset">重設</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 pt-6 space-y-6">
+
+        <!-- Clinical Guidelines Info Banner -->
+        <div class="bg-sky-50/80 border border-sky-200 rounded-2xl p-4 flex items-start space-x-3 text-sky-900 text-xs md:text-sm shadow-sm">
+            <i data-lucide="stethoscope" class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <p class="font-semibold text-sky-950 mb-0.5" data-i18n="guide_title">臨床量度指引：</p>
+                <p class="text-sky-800 leading-relaxed text-xs" data-i18n="guide_desc">
+                    本工具根據臨床頭型規程計算。請輸入由頭骨測量儀（Craniometer Caliper）量得的數據（單位：毫米 mm，請確保單位一致）。
+                </p>
+            </div>
+        </div>
+
+        <!-- Calculator Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Card 1: Cranial Index (CI) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col justify-between hover:shadow-md transition-all-200">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-teal-500"></span>
+                            <h2 class="text-base font-bold text-slate-800" data-i18n="ci_title">1. 頭型指數 (CI)</h2>
+                        </div>
+                        <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">Cranial Index</span>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mb-4" data-i18n="ci_desc">用作評估舟狀頭 (Dolichocephaly) 或短頭/扁頭 (Brachycephaly)。</p>
+
+                    <!-- Formula Box -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs text-slate-600 font-mono text-center mb-5 font-medium">
+                        CI = [ BPD / APD ] × 100%
+                    </div>
+
+                    <!-- Input Fields -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lbl_bpd">
+                                雙頂徑 BPD (Biparietal Diameter / 寬度)
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="bpdInput" step="0.1" placeholder="e.g. 110" 
+                                    oninput="calculateCI()" 
+                                    class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-slate-800 font-medium text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs font-medium text-slate-400">mm</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lbl_apd">
+                                前後徑 APD (Anteroposterior Diameter / 長度)
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="apdInput" step="0.1" placeholder="e.g. 140" 
+                                    oninput="calculateCI()" 
+                                    class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-slate-800 font-medium text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs font-medium text-slate-400">mm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CI Result Container -->
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <div class="flex justify-between items-baseline mb-2">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider" data-i18n="lbl_result">計算結果</span>
+                        <span id="ciValue" class="text-2xl font-extrabold text-slate-300">-- %</span>
+                    </div>
+
+                    <!-- CI Result Badge -->
+                    <div id="ciBadge" class="hidden p-3 rounded-xl border text-sm font-medium flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i id="ciIcon" data-lucide="check-circle" class="w-5 h-5"></i>
+                            <span id="ciStatusText" class="font-bold"></span>
+                        </div>
+                        <span id="ciCategoryText" class="text-xs px-2 py-0.5 rounded-md bg-white/60 font-semibold"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Cranial Vault Asymmetry Index (CVAI) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col justify-between hover:shadow-md transition-all-200">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                            <h2 class="text-base font-bold text-slate-800" data-i18n="cvai_title">2. 頭形非對稱指數 (CVAI)</h2>
+                        </div>
+                        <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">CVAI</span>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mb-4" data-i18n="cvai_desc">用作評估斜頭症 / 斜頭畸形 (Plagiocephaly)。</p>
+
+                    <!-- Formula Box -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs text-slate-600 font-mono text-center mb-5 font-medium">
+                        CVAI = 頭長 (CrL) - 頭寬 (CrW)
+                    </div>
+
+                    <!-- Input Fields -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-0.5" data-i18n="lbl_crl">
+                                頭長 CrL (Cranial Length)
+                            </label>
+                            <p class="text-[11px] text-slate-400 mb-1" data-i18n="lbl_crl_sub">測量位置：眉間點至枕外隆凸</p>
+                            <div class="relative">
+                                <input type="number" id="crlInput" step="0.1" placeholder="e.g. 142" 
+                                    oninput="calculateCVAI()" 
+                                    class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 font-medium text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs font-medium text-slate-400">mm</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-0.5" data-i18n="lbl_crw">
+                                頭寬 CrW (Cranial Width)
+                            </label>
+                            <p class="text-[11px] text-slate-400 mb-1" data-i18n="lbl_crw_sub">測量位置：兩側頂骨間最大距離</p>
+                            <div class="relative">
+                                <input type="number" id="crwInput" step="0.1" placeholder="e.g. 137" 
+                                    oninput="calculateCVAI()" 
+                                    class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 font-medium text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs font-medium text-slate-400">mm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CVAI Result Container -->
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <div class="flex justify-between items-baseline mb-2">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider" data-i18n="lbl_result">計算結果</span>
+                        <span id="cvaiValue" class="text-2xl font-extrabold text-slate-300">--</span>
+                    </div>
+
+                    <!-- CVAI Result Badge -->
+                    <div id="cvaiBadge" class="hidden p-3 rounded-xl border text-sm font-medium flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i id="cvaiIcon" data-lucide="check-circle" class="w-5 h-5"></i>
+                            <span id="cvaiStatusText" class="font-bold"></span>
+                        </div>
+                        <span id="cvaiCategoryText" class="text-xs px-2 py-0.5 rounded-md bg-white/60 font-semibold"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Reference Standard Table & Care Plan Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 space-y-6">
+            <h3 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b border-slate-100 pb-3">
+                <i data-lucide="book-open" class="w-5 h-5 text-teal-600"></i>
+                <span data-i18n="ref_table_title">頭型診斷基準與臨床處置對照表 (Implementation Standards)</span>
+            </h3>
+
+            <!-- Standard Reference Table -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <!-- CI Classification Table -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="bg-slate-100 px-3 py-2 font-bold text-slate-700 border-b border-slate-200 flex justify-between items-center">
+                        <span data-i18n="tbl_ci_header">CI 頭型指數分類</span>
+                        <span class="text-[10px] text-slate-500 font-normal">Standard</span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        <div class="p-2.5 flex justify-between bg-emerald-50/40">
+                            <span class="font-semibold text-emerald-800" data-i18n="norm_text">正常 (Normal)</span>
+                            <span class="font-mono text-emerald-700 font-bold">75% - 85%</span>
+                        </div>
+                        <div class="p-2.5 flex justify-between">
+                            <div>
+                                <span class="font-medium text-amber-800" data-i18n="doli_text">長頭症 (Dolichocephaly)</span>
+                                <p class="text-[10px] text-slate-500" data-i18n="mild_mod_text">輕度至中度</p>
+                            </div>
+                            <span class="font-mono text-amber-700 font-semibold self-center">60% - 74%</span>
+                        </div>
+                        <div class="p-2.5 flex justify-between">
+                            <div>
+                                <span class="font-medium text-rose-800" data-i18n="doli_text">長頭症 (Dolichocephaly)</span>
+                                <p class="text-[10px] text-slate-500" data-i18n="severe_text">重度</p>
+                            </div>
+                            <span class="font-mono text-rose-700 font-semibold self-center">&lt; 60%</span>
+                        </div>
+                        <div class="p-2.5 flex justify-between">
+                            <div>
+                                <span class="font-medium text-amber-800" data-i18n="brachy_text">短頭症/平頭 (Brachycephaly)</span>
+                                <p class="text-[10px] text-slate-500" data-i18n="mild_mod_text">輕度至中度</p>
+                            </div>
+                            <span class="font-mono text-amber-700 font-semibold self-center">86% - 100%</span>
+                        </div>
+                        <div class="p-2.5 flex justify-between">
+                            <div>
+                                <span class="font-medium text-rose-800" data-i18n="brachy_text">短頭症/平頭 (Brachycephaly)</span>
+                                <p class="text-[10px] text-slate-500" data-i18n="severe_text">重度</p>
+                            </div>
+                            <span class="font-mono text-rose-700 font-semibold self-center">&gt; 100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CVAI Classification Table -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="bg-slate-100 px-3 py-2 font-bold text-slate-700 border-b border-slate-200 flex justify-between items-center">
+                        <span data-i18n="tbl_cvai_header">CVAI 頭形非對稱指數分類</span>
+                        <span class="text-[10px] text-slate-500 font-normal">Standard</span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        <div class="p-2.5 flex justify-between bg-emerald-50/40">
+                            <span class="font-semibold text-emerald-800" data-i18n="norm_text">正常 (Normal)</span>
+                            <span class="font-mono text-emerald-700 font-bold">&le; 3.5</span>
+                        </div>
+                        <div class="p-2.5 flex justify-between bg-rose-50/30">
+                            <div>
+                                <span class="font-semibold text-rose-800" data-i18n="plagio_text">斜頭症 (Plagiocephaly)</span>
+                                <p class="text-[10px] text-rose-600" data-i18n="plagio_sub">非對稱性顯著，需姿勢矯形或轉介</p>
+                            </div>
+                            <span class="font-mono text-rose-700 font-bold self-center">&gt; 3.5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interventions Section -->
+            <div class="pt-2">
+                <h4 class="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider" data-i18n="care_plan_title">建議護理方案 (Implementation Care Plan)</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    
+                    <!-- Normal Care Plan -->
+                    <div class="bg-emerald-50/70 border border-emerald-200 p-3.5 rounded-xl">
+                        <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs mb-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span data-i18n="care_norm_title">正常 (Normal)</span>
+                        </div>
+                        <ul class="text-[11px] text-emerald-900 space-y-1.5 list-disc list-inside leading-relaxed">
+                            <li data-i18n="care_norm_1">每3-4小時擺放身體與頭部呈對齊姿態 (Q3-4H)</li>
+                            <li data-i18n="care_norm_2">預防性日常擺位與親子趴趴時光 (Tummy time)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Mild/Moderate Care Plan -->
+                    <div class="bg-amber-50/70 border border-amber-200 p-3.5 rounded-xl">
+                        <div class="flex items-center space-x-2 text-amber-800 font-bold text-xs mb-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span data-i18n="care_mild_title">輕度至中度 (Mild to Moderate)</span>
+                        </div>
+                        <ul class="text-[11px] text-amber-900 space-y-1.5 list-disc list-inside leading-relaxed">
+                            <li data-i18n="care_mild_1">等時對稱旋轉擺位 (仰臥 → 左側臥 → 右側臥)</li>
+                            <li data-i18n="care_mild_2">使用定型頭枕 / 塑形枕 (Gel pillow / Contoured)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Severe Care Plan -->
+                    <div class="bg-rose-50/70 border border-rose-200 p-3.5 rounded-xl">
+                        <div class="flex items-center space-x-2 text-rose-800 font-bold text-xs mb-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span data-i18n="care_severe_title">重度 / 斜頭症 (Severe / Plagiocephaly)</span>
+                        </div>
+                        <ul class="text-[11px] text-rose-900 space-y-1.5 list-disc list-inside leading-relaxed">
+                            <li data-i18n="care_severe_1">安排專科或物理治療轉介 (Referral)</li>
+                            <li data-i18n="care_severe_2">專業頭盔矯形評估與臨床指導 (Orthotic Helmet)</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Language i18n Dictionary
+        const i18n = {
+            zh: {
+                app_title: "嬰兒頭型分析計算器",
+                btn_reset: "重設",
+                guide_title: "臨床量度指引：",
+                guide_desc: "本工具根據臨床頭型規程計算。請輸入由頭骨測量儀（Craniometer Caliper）量得的數據（單位：毫米 mm，請確保單位一致）。",
+                ci_title: "1. 頭型指數 (CI)",
+                ci_desc: "用作評估舟狀頭 (Dolichocephaly) 或短頭/扁頭 (Brachycephaly)。",
+                lbl_bpd: "雙頂徑 BPD (Biparietal Diameter / 寬度)",
+                lbl_apd: "前後徑 APD (Anteroposterior Diameter / 長度)",
+                cvai_title: "2. 頭形非對稱指數 (CVAI)",
+                cvai_desc: "用作評估斜頭症 / 斜頭畸形 (Plagiocephaly)。",
+                lbl_crl: "頭長 CrL (Cranial Length)",
+                lbl_crl_sub: "測量位置：眉間點至枕外隆凸",
+                lbl_crw: "頭寬 CrW (Cranial Width)",
+                lbl_crw_sub: "測量位置：兩側頂骨間最大距離",
+                lbl_result: "計算結果",
+                ref_table_title: "頭型診斷基準與臨床處置對照表 (Implementation Standards)",
+                tbl_ci_header: "CI 頭型指數分類",
+                tbl_cvai_header: "CVAI 頭形非對稱指數分類",
+                norm_text: "正常 (Normal)",
+                doli_text: "長頭症 (Dolichocephaly)",
+                brachy_text: "短頭症/平頭 (Brachycephaly)",
+                plagio_text: "斜頭症 (Plagiocephaly)",
+                plagio_sub: "非對稱性顯著，需姿勢矯形或轉介",
+                mild_mod_text: "輕度至中度 (Mild to Moderate)",
+                severe_text: "重度 (Severe)",
+                care_plan_title: "建議護理方案 (Implementation Care Plan)",
+                care_norm_title: "正常 (Normal)",
+                care_norm_1: "每3-4小時擺放身體與頭部呈對齊姿態 (Q3-4H)",
+                care_norm_2: "預防性日常擺位與親子趴趴時光 (Tummy time)",
+                care_mild_title: "輕度至中度 (Mild to Moderate)",
+                care_mild_1: "等時對稱旋轉擺位 (仰臥 → 左側臥 → 右側臥)",
+                care_mild_2: "使用定型頭枕 / 塑形枕 (Gel pillow / Contoured)",
+                care_severe_title: "重度 / 斜頭症 (Severe / Plagiocephaly)",
+                care_severe_1: "安排專科或物理治療轉介 (Referral)",
+                care_severe_2: "專業頭盔矯形評估與臨床指導 (Orthotic Helmet)"
+            },
+            en: {
+                app_title: "Infant Head Shape Calculator",
+                btn_reset: "Reset",
+                guide_title: "Clinical Measurement Guide:",
+                guide_desc: "Calculated based on clinical cranial protocols. Enter measurements obtained using a craniometer caliper (unit: mm). Ensure consistent units.",
+                ci_title: "1. Cranial Index (CI)",
+                ci_desc: "Used to assess Dolichocephaly or Brachycephaly.",
+                lbl_bpd: "Biparietal Diameter BPD (Width)",
+                lbl_apd: "Anteroposterior Diameter APD (Length)",
+                cvai_title: "2. Cranial Vault Asymmetry Index (CVAI)",
+                cvai_desc: "Used to assess Plagiocephaly (Asymmetry).",
+                lbl_crl: "Cranial Length CrL",
+                lbl_crl_sub: "Glabella to occipital protuberance",
+                lbl_crw: "Cranial Width CrW",
+                lbl_crw_sub: "Maximum width between parietal bones",
+                lbl_result: "Result",
+                ref_table_title: "Clinical Reference & Care Implementation Standards",
+                tbl_ci_header: "CI Classification",
+                tbl_cvai_header: "CVAI Classification",
+                norm_text: "Normal",
+                doli_text: "Dolichocephaly",
+                brachy_text: "Brachycephaly",
+                plagio_text: "Plagiocephaly",
+                plagio_sub: "Significant asymmetry; intervention required",
+                mild_mod_text: "Mild to Moderate",
+                severe_text: "Severe",
+                care_plan_title: "Implementation Care Plan",
+                care_norm_title: "Normal",
+                care_norm_1: "Reposition body and head in alignment Q3-4H",
+                care_norm_2: "Preventative positioning and supervised tummy time",
+                care_mild_title: "Mild to Moderate",
+                care_mild_1: "Equal-time symmetrical rotation (Supine → L lateral → R lateral)",
+                care_mild_2: "Use Gel pillow / Contoured positioning pillow",
+                care_severe_title: "Severe / Plagiocephaly",
+                care_severe_1: "Referral to Specialist / Physical Therapy",
+                care_severe_2: "Orthotic Helmet evaluation & professional guidance"
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Language Switcher Function
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langLabel').innerText = currentLang === 'zh' ? 'English' : '繁體中文';
+
+            // Apply text replacements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) {
+                    el.innerText = i18n[currentLang][key];
+                }
+            });
+
+            // Re-evaluate current calculations to update badges language
+            calculateCI();
+            calculateCVAI();
+        }
+
+        // Calculation: Cranial Index (CI)
+        function calculateCI() {
+            const bpd = parseFloat(document.getElementById('bpdInput').value);
+            const apd = parseFloat(document.getElementById('apdInput').value);
+
+            const ciValueEl = document.getElementById('ciValue');
+            const ciBadge = document.getElementById('ciBadge');
+            const ciIcon = document.getElementById('ciIcon');
+            const ciStatusText = document.getElementById('ciStatusText');
+            const ciCategoryText = document.getElementById('ciCategoryText');
+
+            if (isNaN(bpd) || isNaN(apd) || apd <= 0 || bpd <= 0) {
+                ciValueEl.innerText = '-- %';
+                ciValueEl.className = 'text-2xl font-extrabold text-slate-300';
+                ciBadge.classList.add('hidden');
+                return;
+            }
+
+            const ci = (bpd / apd) * 100;
+            ciValueEl.innerText = ci.toFixed(1) + '%';
+            ciBadge.classList.remove('hidden');
+
+            const isZh = currentLang === 'zh';
+
+            // Classification Logic
+            if (ci >= 75 && ci <= 85) {
+                // Normal
+                ciValueEl.className = 'text-2xl font-extrabold text-emerald-600';
+                ciBadge.className = 'p-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800 text-sm font-medium flex items-center justify-between';
+                ciStatusText.innerText = isZh ? '正常 (Normal)' : 'Normal';
+                ciCategoryText.innerText = isZh ? '標準頭型' : 'Standard';
+                ciIcon.setAttribute('data-lucide', 'check-circle');
+            } else if (ci >= 60 && ci < 75) {
+                // Dolichocephaly Mild to Moderate
+                ciValueEl.className = 'text-2xl font-extrabold text-amber-600';
+                ciBadge.className = 'p-3 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 text-sm font-medium flex items-center justify-between';
+                ciStatusText.innerText = isZh ? '長頭症 (Dolichocephaly)' : 'Dolichocephaly';
+                ciCategoryText.innerText = isZh ? '輕度至中度 (Mild to Moderate)' : 'Mild to Moderate';
+                ciIcon.setAttribute('data-lucide', 'alert-triangle');
+            } else if (ci < 60) {
+                // Dolichocephaly Severe
+                ciValueEl.className = 'text-2xl font-extrabold text-rose-600';
+                ciBadge.className = 'p-3 rounded-xl border bg-rose-50 border-rose-200 text-rose-800 text-sm font-medium flex items-center justify-between';
+                ciStatusText.innerText = isZh ? '長頭症 (Dolichocephaly)' : 'Dolichocephaly';
+                ciCategoryText.innerText = isZh ? '重度 (Severe)' : 'Severe';
+                ciIcon.setAttribute('data-lucide', 'alert-octagon');
+            } else if (ci > 85 && ci <= 100) {
+                // Brachycephaly Mild to Moderate
+                ciValueEl.className = 'text-2xl font-extrabold text-amber-600';
+                ciBadge.className = 'p-3 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 text-sm font-medium flex items-center justify-between';
+                ciStatusText.innerText = isZh ? '短頭症/平頭 (Brachycephaly)' : 'Brachycephaly';
+                ciCategoryText.innerText = isZh ? '輕度至中度 (Mild to Moderate)' : 'Mild to Moderate';
+                ciIcon.setAttribute('data-lucide', 'alert-triangle');
+            } else if (ci > 100) {
+                // Brachycephaly Severe
+                ciValueEl.className = 'text-2xl font-extrabold text-rose-600';
+                ciBadge.className = 'p-3 rounded-xl border bg-rose-50 border-rose-200 text-rose-800 text-sm font-medium flex items-center justify-between';
+                ciStatusText.innerText = isZh ? '短頭症/平頭 (Brachycephaly)' : 'Brachycephaly';
+                ciCategoryText.innerText = isZh ? '重度 (Severe)' : 'Severe';
+                ciIcon.setAttribute('data-lucide', 'alert-octagon');
+            }
+
+            lucide.createIcons();
+        }
+
+        // Calculation: Cranial Vault Asymmetry Index (CVAI)
+        function calculateCVAI() {
+            const crl = parseFloat(document.getElementById('crlInput').value);
+            const crw = parseFloat(document.getElementById('crwInput').value);
+
+            const cvaiValueEl = document.getElementById('cvaiValue');
+            const cvaiBadge = document.getElementById('cvaiBadge');
+            const cvaiIcon = document.getElementById('cvaiIcon');
+            const cvaiStatusText = document.getElementById('cvaiStatusText');
+            const cvaiCategoryText = document.getElementById('cvaiCategoryText');
+
+            if (isNaN(crl) || isNaN(crw)) {
+                cvaiValueEl.innerText = '--';
+                cvaiValueEl.className = 'text-2xl font-extrabold text-slate-300';
+                cvaiBadge.classList.add('hidden');
+                return;
+            }
+
+            // Standard difference calculation: | CrL - CrW |
+            const cvai = Math.abs(crl - crw);
+            cvaiValueEl.innerText = cvai.toFixed(1) + ' mm';
+            cvaiBadge.classList.remove('hidden');
+
+            const isZh = currentLang === 'zh';
+
+            if (cvai > 3.5) {
+                // Plagiocephaly
+                cvaiValueEl.className = 'text-2xl font-extrabold text-rose-600';
+                cvaiBadge.className = 'p-3 rounded-xl border bg-rose-50 border-rose-200 text-rose-800 text-sm font-medium flex items-center justify-between';
+                cvaiStatusText.innerText = isZh ? '斜頭症 (Plagiocephaly)' : 'Plagiocephaly';
+                cvaiCategoryText.innerText = 'CVAI > 3.5';
+                cvaiIcon.setAttribute('data-lucide', 'alert-octagon');
+            } else {
+                // Normal
+                cvaiValueEl.className = 'text-2xl font-extrabold text-emerald-600';
+                cvaiBadge.className = 'p-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800 text-sm font-medium flex items-center justify-between';
+                cvaiStatusText.innerText = isZh ? '正常 (Normal)' : 'Normal';
+                cvaiCategoryText.innerText = 'CVAI ≤ 3.5';
+                cvaiIcon.setAttribute('data-lucide', 'check-circle');
+            }
+
+            lucide.createIcons();
+        }
+
+        // Reset Inputs
+        function resetAll() {
+            document.getElementById('bpdInput').value = '';
+            document.getElementById('apdInput').value = '';
+            document.getElementById('crlInput').value = '';
+            document.getElementById('crwInput').value = '';
+
+            calculateCI();
+            calculateCVAI();
+        }
+    </script>
+</body>
+</html>
